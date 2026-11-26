@@ -36,7 +36,7 @@ function copyText(ptr, capacity, value) {
 function fileTable() {
   return JSON.parse(
     localStorage.getItem("window311.files.v1") ||
-      '{"LEIA-ME.TXT":"Bem-vindo ao Window 3.11!"}',
+      '{"LEIA-ME.TXT":"Bem-vindo ao Windows 95!"}',
   );
 }
 const host = {
@@ -205,7 +205,7 @@ function bootFrame(ms) {
     screenCanvas.height = height;
   }
   ctx.save();
-  ctx.fillStyle = graphics ? "#aaa" : "#000";
+  ctx.fillStyle = graphics ? "#8bbce3" : "#000";
   ctx.fillRect(0, 0, width, height);
   const scale = Math.min(width / w, height / h);
   ctx.translate(
@@ -216,21 +216,14 @@ function bootFrame(ms) {
   ctx.textBaseline = "top";
   if (!graphics) {
     const rows = [
-      [0, "386DX BIOS   •   SYSTEM CONFIGURATION"],
+      [0, "486DX BIOS   •   SYSTEM CONFIGURATION"],
       [
         220,
         "Memory test: " + Math.min(4096, Math.floor(ms / 16) * 64) + " KB OK",
       ],
       [1130, "Drive C:  Fixed disk detected"],
       [1490, ""],
-      [1500, "Starting MS-DOS..."],
-      [2050, "C:\\>C:\\DOS\\SMARTDRV.EXE"],
-      [2480, "C:\\>PATH C:\\DOS;C:\\WINDOWS"],
-      [2870, ""],
-      [
-        2990,
-        "C:\\>" + "WIN".slice(0, Math.max(0, Math.floor((ms - 3040) / 110))),
-      ],
+      [1500, "Iniciando o Windows 95..."],
     ];
     ctx.font = "18px monospace";
     ctx.fillStyle = "#c0c0c0";
@@ -245,6 +238,15 @@ function bootFrame(ms) {
     if (Math.floor(ms / 250) % 2 === 0)
       ctx.fillRect(15 + ctx.measureText(last).width, y - 6, 10, 2);
   } else {
+    const sky = ctx.createLinearGradient(0,0,0,h);
+    sky.addColorStop(0,"#4686c4"); sky.addColorStop(1,"#e8f3fa");
+    ctx.fillStyle=sky; ctx.fillRect(0,0,w,h);
+    for (let i=0;i<42;i++) {
+      const x=(i*137)%w,y=(i*73)%h;
+      const cloud=ctx.createRadialGradient(x,y,0,x,y,80);
+      cloud.addColorStop(0,"rgba(255,255,255,.45)"); cloud.addColorStop(1,"rgba(255,255,255,0)");
+      ctx.fillStyle=cloud;ctx.fillRect(x-80,y-80,160,160);
+    }
     const colors = ["#ed4035", "#31aa46", "#295ec4", "#ffc52b"];
     // Draw the waving panes and the trailing black pixels on a coarse grid.
     for (let col = 0; col < 36; col++) {
@@ -278,10 +280,11 @@ function bootFrame(ms) {
     }
     ctx.fillStyle = "#111";
     ctx.textAlign = "center";
-    ctx.font = "bold italic 64px Georgia, serif";
-    ctx.fillText("Windows", 320, 232);
+    ctx.font = "bold 60px Arial, sans-serif";
+    ctx.fillText("Windows 95", 320, 232);
     ctx.font = "20px Arial, sans-serif";
-    ctx.fillText("Versão 3.11", 320, 309);
+    ctx.fillStyle="#173458"; ctx.fillRect(0,h-9,w,9);
+    ctx.fillStyle="#91bfe9"; ctx.fillRect((ms/4)%w-75,h-8,75,6);
   }
   ctx.restore();
 }
@@ -337,13 +340,15 @@ async function boot() {
     Enter: 13,
     Escape: 27,
     F1: 1,
+    ArrowUp: 1001,
+    ArrowDown: 1002,
     F2: 2,
     F4: 4,
   };
   screenCanvas.onkeydown = (e) => {
     let code =
       keys[e.key] ?? ([...e.key].length === 1 ? e.key.codePointAt(0) : 0);
-    if (!code || e.metaKey || (e.ctrlKey && e.key.toLowerCase() !== "s"))
+    if (!code || e.metaKey || (e.ctrlKey && e.key.toLowerCase() !== "s" && e.key !== "Escape"))
       return;
     e.preventDefault();
     core.key(code, Number(e.ctrlKey), Number(e.altKey));

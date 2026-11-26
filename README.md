@@ -1,4 +1,4 @@
-# Window 3.11
+# Windows 95
 
 Desktop gráfico em português escrito em **C e compilado para WebAssembly**. O módulo controla o empilhamento, foco, movimento, minimização e redimensionamento das janelas, desenha os grupos de programas e processa a entrada dos aplicativos. O navegador fornece o Canvas 2D, eventos, relógio e armazenamento local.
 
@@ -19,8 +19,8 @@ php -r 'require "src/Windows/Desktop.php"; Windows\Desktop::render(classic: true
 
 ## Usar
 
-- Clique no ícone do programa. No Gerenciador, Tab seleciona o próximo ícone e Enter o abre. Em telas pequenas use a roda do mouse para percorrer os grupos.
-- Arraste a barra de título ou o canto inferior direito da janela. Os botões com triângulos minimizam e maximizam. Clique em um ícone no desktop para restaurar uma janela minimizada.
+- O boot exibe a contagem de memória e a abertura do Windows 95. A área de trabalho oferece Meu computador, Bloco de Notas e Painel de Controle.
+- Abra os demais aplicativos pelo botão Iniciar. A barra de tarefas alterna entre janelas e restaura as minimizadas. Os três controles no título minimizam, maximizam e fecham a janela.
 - O Bloco de Notas aceita digitação, colagem e edição no fim do documento. Ctrl+S salva um TXT. Arquivos abre os textos salvos no mesmo navegador. O editor comporta até 32.767 bytes por documento.
 - O Paintbrush oferece desenho à mão livre, paleta de 16 cores e um desenho persistente. O Campo Minado permite marcar casas com o botão direito.
 - O prompt reconhece HELP, DIR, VER, CLS, EXIT e nomes de programas. A calculadora aceita mouse e teclado. O Painel de Controle muda a cor do desktop.
@@ -35,4 +35,4 @@ A lógica está em `src/desktop.c`. O adaptador `assets/js/host.js` implementa a
 
 ## Escopo e licença
 
-Recriação independente da interface e de um subconjunto dos acessórios do Windows 3.11. O projeto não implementa execução de binários Win16, drivers ou rede do Windows for Workgroups. Código e ícones próprios, sob Apache-2.0.
+Recriação independente da interface e de um subconjunto dos acessórios do Windows 95. O projeto não implementa execução de binários Win16, drivers ou rede do Windows for Workgroups. Código e ícones próprios, sob Apache-2.0.

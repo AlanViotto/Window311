@@ -19,7 +19,7 @@ final class Desktop
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="author" content="<?= htmlspecialchars(self::AUTHOR, ENT_QUOTES, 'UTF-8') ?>">
-  <title>Window 3.11</title>
+  <title><?= $classic ? 'Window 3.11' : 'Windows 95' ?></title>
   <link rel="stylesheet" href="dist/css/<?= $style ?>.css">
   <script defer src="dist/js/<?= $script ?>.js"></script>
 </head>
@@ -28,8 +28,8 @@ final class Desktop
   <main id="desktop" aria-label="Área de trabalho"></main>
   <div id="minimized"></div>
 <?php else: ?>
-  <canvas id="screen" tabindex="0" aria-label="Window 3.11. Tab alterna programas. Enter abre o programa selecionado. F1 abre a Ajuda."></canvas>
-  <output id="message" hidden>Inicializando Window 3.11…</output>
+  <canvas id="screen" tabindex="0" aria-label="Windows 95. Ctrl+Esc abre o menu Iniciar. F1 abre a Ajuda."></canvas>
+  <output id="message" hidden>Inicializando Windows 95…</output>
 <?php endif; ?>
 </body>
 </html>

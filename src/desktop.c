@@ -1,4 +1,4 @@
-// Window 3.11 desktop. All geometry, interaction and application state live
+// Windows 95 desktop. All geometry, interaction and application state live
 // here.
 #define IMPORT(name) __attribute__((import_module("env"), import_name(#name)))
 #define EXPORT(name) __attribute__((export_name(#name)))
@@ -51,13 +51,13 @@ enum {
   MINES,
   COUNT
 };
-static const char *titles[] = {"Gerenciador de Programas",
-                               "Arquivos",
+static const char *titles[] = {"Programas",
+                               "Meu computador",
                                "Painel de Controle",
                                "MS-DOS",
                                "Ajuda",
                                "Bloco de Notas",
-                               "Paintbrush",
+                               "Paint",
                                "Calculadora",
                                "Relógio",
                                "Campo Minado"};
@@ -65,6 +65,8 @@ typedef struct {
   int x, y, w, h, shown, min, max, z, ox, oy, ow, oh;
 } Window;
 static Window win[COUNT];
+static int start_open, start_selection;
+enum { TASKBAR_HEIGHT = 32 };
 static int sw, sh, top, active, gesture, dx, dy, menu = -1, selected = 1,
                                                  bg = DESK;
 static int imin(int a, int b) { return a < b ? a : b; }
@@ -145,10 +147,7 @@ static void close_app(int id) {
     doc[0] = 0;
     copy(docname, "SEM-TITULO.TXT", 256);
   }
-  if (id == MANAGER)
-    win[id].min = 1;
-  else
-    win[id].shown = 0;
+  win[id].shown = 0;
   menu = -1;
   refocus();
 }
@@ -394,7 +393,7 @@ static void reveal(int cell) {
     ended = 2;
 }
 static char command[120],
-    output[2048] = "Window 3.11\nDigite HELP para ver os comandos.";
+    output[2048] = "Windows 95\nDigite HELP para ver os comandos.";
 static int eq(const char *a, const char *b) {
   while (*a && *b && *a == *b) {
     a++;
@@ -423,7 +422,7 @@ static void execute(void) {
          "DIR   CLS   VER   EXIT\nNOTEPAD   CALC   PBRUSH   WINFILE   WINMINE",
          sizeof output);
   else if (eq(command, "VER"))
-    copy(output, "Window 3.11 / WebAssembly", sizeof output);
+    copy(output, "Windows 95 / WebAssembly", sizeof output);
   else if (eq(command, "EXIT"))
     close_app(TERMINAL);
   else {
@@ -502,7 +501,7 @@ static void body(int id, Window *w, int x, int y) {
     label(x + 44, y + w->h - 82, command, WHITE, 0);
     break;
   case HELP:
-    lines("Window 3.11\nClique em um programa para abrir. Arraste a barra de "
+    lines("Windows 95\nClique em um programa para abrir. Use Iniciar para abrir os acessórios. Arraste a barra de "
           "título para mover ou o canto inferior direito para redimensionar. "
           "Tab seleciona programas e Enter abre. Alt+F4 fecha a janela.",
           x + 8, y + 8, w->w - 30, 10, BLACK);
@@ -563,16 +562,13 @@ static void draw_window(int id) {
   int x = w->x, y = w->y;
   bevel(x, y, w->w, w->h, GRAY);
   rect(x + 4, y + 4, w->w - 8, 23, active == id ? NAVY : SHADOW);
-  clip(x + 27, y + 4, w->w - 77, 23);
-  centered(x + (w->w - 20) / 2, y + 8, titles[id], WHITE, 1);
+  clip(x + 8, y + 4, w->w - 86, 23);
+  label(x + 10, y + 8, titles[id], WHITE, 1);
   unclip();
-  bevel(x + 5, y + 5, 21, 20, GRAY);
-  rect(x + 10, y + 14, 11, 2, BLACK);
-  bevel(x + w->w - 48, y + 5, 21, 20, GRAY);
-  bevel(x + w->w - 26, y + 5, 21, 20, GRAY);
-  label(x + w->w - 45, y + 7, "▼", BLACK, 0);
-  label(x + w->w - 24, y + 7, "▲", BLACK, 0);
-  rect(x + 5, y + 28, w->w - 10, 20, WHITE);
+  button(x+w->w-72,y+4,22,"_");
+  button(x+w->w-50,y+4,22,"□");
+  button(x+w->w-26,y+4,22,"×");
+  rect(x + 5, y + 28, w->w - 10, 20, GRAY);
   label(x + 10, y + 30, "Janela", BLACK, 0);
   label(x + 73, y + 30, "Ajuda", BLACK, 0);
   int bx = x + 6, by = y + 50;
@@ -588,15 +584,44 @@ static void draw_window(int id) {
       label(x + 11, y + 51 + 21 * i, items[i], BLACK, 0);
   }
 }
+static const int shortcuts[] = {FILES, NOTES, CONTROL};
+static int task_width(void) {
+  int count = 0;
+  for (int i=0;i<COUNT;i++) count += win[i].shown;
+  return imin(150,(sw-175)/imax(1,count));
+}
+static int start_y(void) { return sh-COUNT*25-6; }
+static void taskbar(void) {
+  rect(0,sh,sw,TASKBAR_HEIGHT,GRAY);
+  rect(0,sh,sw,2,WHITE);
+  bevel(3,sh+4,85,25,GRAY);
+  for(int i=0;i<4;i++) rect(10+i%2*7,sh+10+i/2*7,6,6,(int[]){RED,GREEN,BLUE,YELLOW}[i]);
+  label(30,sh+9,"Iniciar",BLACK,1);
+  int x=93, width=task_width();
+  for(int i=0;i<COUNT;i++) if(win[i].shown) {
+    bevel(x,sh+4,width-2,25,i==active?PAPER:GRAY);
+    clip(x+3,sh+5,width-8,21);
+    label(x+6,sh+9,titles[i],BLACK,i==active);
+    unclip(); x+=width;
+  }
+  char clock_value[32]; clock_text(clock_value); clock_value[5]=0;
+  bevel(sw-73,sh+4,70,25,GRAY);
+  centered(sw-38,sh+9,clock_value,BLACK,0);
+  if (!start_open) return;
+  int y=start_y();
+  bevel(2,y,205,sh-y,GRAY);
+  rect(5,y+3,20,sh-y-6,NAVY);
+  for(int i=0;i<COUNT;i++) {
+    if(i==start_selection) rect(26,y+3+i*25,177,25,NAVY);
+    label(34,y+6+i*25,titles[i],i==start_selection?WHITE:BLACK,0);
+  }
+}
 EXPORT(draw) void draw(void) {
-  rect(0, 0, sw, sh, bg);
-  int slot = 0;
-  for (int i = 0; i < COUNT; i++)
-    if (win[i].shown && win[i].min) {
-      icon(i, 10 + slot * 105, sh - 60);
-      label(5 + slot * 105, sh - 25, titles[i], WHITE, 1);
-      slot++;
-    }
+  rect(0,0,sw,sh,bg);
+  for(int i=0;i<3;i++) {
+    icon(shortcuts[i],32,16+i*79);
+    centered(50,51+i*79,titles[shortcuts[i]],WHITE,0);
+  }
   int prev = 0;
   for (;;) {
     int best = -1;
@@ -609,6 +634,7 @@ EXPORT(draw) void draw(void) {
     draw_window(best);
     prev = win[best].z;
   }
+  taskbar();
 }
 EXPORT(init) void init(void) {
   sw = 800;
@@ -616,12 +642,12 @@ EXPORT(init) void init(void) {
   for (int i = 0; i < PW * PH; i++)
     bitmap[i] = WHITE;
   paint_store(bitmap, PW * PH, 0);
-  open_app(MANAGER);
+  active = -1;
 }
 EXPORT(resize) void resize(int width, int height) {
   int initial = top == 1 && win[MANAGER].shown && !win[MANAGER].max;
   sw = width;
-  sh = height;
+  sh = height - TASKBAR_HEIGHT;
   if (initial) {
     win[MANAGER].x = (sw - win[MANAGER].w) / 2;
     win[MANAGER].y = (sh - win[MANAGER].h) / 3;
@@ -762,6 +788,26 @@ EXPORT(pointer) void pointer(int kind, int x, int y, int button_id) {
       stroke(clamp(x - w->x - 10, 0, PW - 1), clamp(y - w->y - 82, 0, PH - 1));
     return;
   }
+  if (y>=sh) {
+    menu=-1;
+    if (x<89) { start_open=!start_open; return; }
+    start_open=0;
+    int left=93, width=task_width();
+    for(int i=0;i<COUNT;i++) if(win[i].shown) {
+      if(x>=left && x<left+width) {
+        if(i==active) {win[i].min=1;refocus();} else open_app(i);
+        return;
+      }
+      left+=width;
+    }
+    return;
+  }
+  if(start_open) {
+    start_open=0;
+    if(x>=2 && x<207 && y>=start_y()+3 && y<sh-3) {
+      open_app((y-start_y()-3)/25); return;
+    }
+  }
   int id = -1;
   for (int i = 0; i < COUNT; i++) {
     Window *w = win + i;
@@ -771,14 +817,7 @@ EXPORT(pointer) void pointer(int kind, int x, int y, int button_id) {
   }
   if (id < 0) {
     menu = -1;
-    if (y >= sh - 65) {
-      int slot = 0;
-      for (int i = 0; i < COUNT; i++)
-        if (win[i].shown && win[i].min && slot++ == x / 105) {
-          open_app(i);
-          break;
-        }
-    }
+    if(x<104 && y>=12 && y<12+3*79) open_app(shortcuts[(y-12)/79]);
     return;
   }
   int old = menu;
@@ -807,11 +846,9 @@ EXPORT(pointer) void pointer(int kind, int x, int y, int button_id) {
     return;
   }
   if (y <= 27) {
-    if (x < 29)
-      menu = old == id ? -1 : id;
-    else if (x > w->w - 27)
-      maximize(w);
-    else if (x > w->w - 50) {
+    if (x > w->w - 27) close_app(id);
+    else if (x > w->w - 51) maximize(w);
+    else if (x > w->w - 73) {
       w->min = 1;
       refocus();
     } else if (!w->max) {
@@ -856,6 +893,15 @@ static void type(char *s, int cap, int c) {
   s[n + size] = 0;
 }
 EXPORT(key) void key(int c, int ctrl, int alt) {
+  if (ctrl && c == 27) {start_open=!start_open; return;}
+  if(start_open) {
+    if(c==27) start_open=0;
+    if(c==9 || c==1002) start_selection=(start_selection+1)%COUNT;
+    if(c==1001) start_selection=(start_selection+COUNT-1)%COUNT;
+    if(c==13) { start_open=0; open_app(start_selection); }
+    return;
+  }
+  if(c==1001 || c==1002) return;
   if (alt && c == 4 && active >= 0) {
     close_app(active);
     return;
