@@ -136,13 +136,90 @@ function pointer(e, kind) {
                e.button);
   core.draw();
 }
+// Virtual VGA display during cold start. The DOS screen and the splash use
+// different video modes, just as the transition to a graphics driver would.
+function bootFrame(ms) {
+  const graphics = ms >= 3650;
+  const w = graphics ? 640 : 720, h = graphics ? 480 : 400;
+  const width = Math.max(1, innerWidth), height = Math.max(1, innerHeight);
+  if (screenCanvas.width !== width || screenCanvas.height !== height) {
+    screenCanvas.width = width;
+    screenCanvas.height = height;
+  }
+  ctx.save();
+  ctx.fillStyle = graphics ? '#aaa' : '#000';
+  ctx.fillRect(0, 0, width, height);
+  const scale = Math.min(width / w, height / h);
+  ctx.translate(graphics ? (width-w*scale)/2 : 0, graphics ? (height-h*scale)/2 : 0);
+  ctx.scale(scale, scale);
+  ctx.textBaseline = 'top';
+  if (!graphics) {
+    const rows = [
+      [0,'386DX BIOS   •   SYSTEM CONFIGURATION'],
+      [220,'Memory test: '+Math.min(4096,Math.floor(ms/16)*64)+' KB OK'],
+      [1130,'Drive C:  Fixed disk detected'],
+      [1490,''],
+      [1500,'Starting MS-DOS...'],
+      [2050,'C:\\>C:\\DOS\\SMARTDRV.EXE'],
+      [2480,'C:\\>PATH C:\\DOS;C:\\WINDOWS'],
+      [2870,''],
+      [2990,'C:\\>'+'WIN'.slice(0,Math.max(0,Math.floor((ms-3040)/110)))]
+    ];
+    ctx.font = '18px monospace';
+    ctx.fillStyle = '#c0c0c0';
+    let y = 16, last = '';
+    for (const [at, text] of rows) {
+      if (ms < at) break;
+      ctx.fillText(text, 14, y);
+      y += 23;
+      last = text;
+    }
+    if (Math.floor(ms/250)%2 === 0)
+      ctx.fillRect(15+ctx.measureText(last).width,y-6,10,2);
+  } else {
+    const colors = ['#ed4035','#31aa46','#295ec4','#ffc52b'];
+    // Draw the waving panes and the trailing black pixels on a coarse grid.
+    for (let col = 0; col < 36; col++) {
+      const bend = Math.round(3*Math.sin(col/6));
+      for (let row = 0; row < 23; row++) {
+        if (col < 12 && (col+row)%Math.max(2,5-Math.floor(col/3)) !== 0) continue;
+        const border = col<12 || col===12 || col===23 || col===24 || col===35 ||
+                       row<2 || row===11 || row===12 || row>20;
+        ctx.fillStyle = border ? '#111' : colors[(row>11?2:0)+(col>23?1:0)];
+        ctx.fillRect(197+col*6+(22-row)*1.5,93+(row+bend)*5,6,5);
+      }
+    }
+    ctx.fillStyle = '#111'; ctx.textAlign = 'center';
+    ctx.font = 'bold italic 64px Georgia, serif';
+    ctx.fillText('Windows',320,232);
+    ctx.font = '20px Arial, sans-serif';
+    ctx.fillText('Versão 3.11',320,309);
+  }
+  ctx.restore();
+}
+
 async function boot() {
-  const res = await fetch('desktop.wasm');
-  if (!res.ok)
-    throw Error(res.status);
-  core = (await WebAssembly.instantiate(await res.arrayBuffer(), {
-           env : host
-         })).instance.exports;
+  let frame;
+  const start = performance.now();
+  function animate() {
+    bootFrame(performance.now()-start);
+    frame = requestAnimationFrame(animate);
+  }
+  message.hidden = true;
+  animate();
+  try {
+    const [instance] = await Promise.all([
+      (async () => {
+        const response = await fetch('desktop.wasm');
+        if (!response.ok) throw Error(response.status);
+        return WebAssembly.instantiate(await response.arrayBuffer(), {env:host});
+      })(),
+      new Promise(resolve => setTimeout(resolve, 5450))
+    ]);
+    core = instance.instance.exports;
+  } finally {
+    cancelAnimationFrame(frame);
+  }
   core.init();
   resize();
   message.hidden = true;
@@ -188,6 +265,7 @@ async function boot() {
   }, 1000);
 }
 boot().catch(error => {
+  message.hidden = false;
   message.textContent =
       'Falha ao carregar o WebAssembly. Abra o projeto via HTTP. ' +
       error.message;
