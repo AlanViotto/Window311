@@ -4,6 +4,7 @@
 #define EXPORT(name) __attribute__((export_name(#name)))
 IMPORT(rect) void rect(int, int, int, int, int);
 IMPORT(label) void label(int, int, const char *, int, int);
+IMPORT(centered) void centered(int,int,const char*,int,int);
 IMPORT(clip) void clip(int, int, int, int);
 IMPORT(unclip) void unclip(void);
 IMPORT(random) int random_below(int);
@@ -225,7 +226,7 @@ static void icon(int id, int x, int y) {
     for (int j = 7; j < 27; j += 4)
       rect(x + 9, y + j, 15, 1, BLUE);
 }
-static int cols(Window *w) { return imax(2, (w->w - 28) / 113); }
+static int cols(Window *w) { return clamp((w->w - 28) / 113, 1, 4); }
 static int tile_y(Window *w, int id) {
   int c = cols(w), g = id <= 4 ? 0 : id <= 8 ? 1 : 2, base = 0;
   for (int i = 0; i < g; i++)
@@ -235,7 +236,8 @@ static int tile_y(Window *w, int id) {
 }
 static int tile_x(Window *w, int id) {
   int k = id == MINES ? 0 : (id - 1) % 4;
-  return 14 + (k % cols(w)) * 113;
+  int columns = cols(w);
+  return (w->w - 12 - columns * 113) / 2 + (k % columns) * 113;
 }
 static const char *sections[] = {"Principal", "Acessórios", "Jogos"};
 static int offset;
@@ -246,10 +248,10 @@ static void manager(Window *w, int x, int y) {
       rect(x + 6, ty - 22, w->w - 24, 20, SLATE);
       label(x + 13, ty - 20, sections[(i - 1) / 4], WHITE, 1);
     }
-    icon(i, tx + 28, ty);
+    icon(i, tx + 38, ty);
     if (i == selected)
       rect(tx, ty + 32, 108, 18, NAVY);
-    label(tx + 2, ty + 33, titles[i], i == selected ? WHITE : BLACK, 0);
+    centered(tx + 54, ty + 33, titles[i], i == selected ? WHITE : BLACK, 0);
   }
 }
 static char display[48] = "0";
@@ -561,7 +563,9 @@ static void draw_window(int id) {
   int x = w->x, y = w->y;
   bevel(x, y, w->w, w->h, GRAY);
   rect(x + 4, y + 4, w->w - 8, 23, active == id ? NAVY : SHADOW);
-  label(x + 32, y + 8, titles[id], WHITE, 1);
+  clip(x + 27, y + 4, w->w - 77, 23);
+  centered(x + (w->w - 20) / 2, y + 8, titles[id], WHITE, 1);
+  unclip();
   bevel(x + 5, y + 5, 21, 20, GRAY);
   rect(x + 10, y + 14, 11, 2, BLACK);
   bevel(x + w->w - 48, y + 5, 21, 20, GRAY);
@@ -615,8 +619,13 @@ EXPORT(init) void init(void) {
   open_app(MANAGER);
 }
 EXPORT(resize) void resize(int width, int height) {
+  int initial = top == 1 && win[MANAGER].shown && !win[MANAGER].max;
   sw = width;
   sh = height;
+  if (initial) {
+    win[MANAGER].x = (sw - win[MANAGER].w) / 2;
+    win[MANAGER].y = (sh - win[MANAGER].h) / 3;
+  }
   for (int i = 0; i < COUNT; i++)
     if (win[i].shown) {
       if (win[i].max) {
@@ -624,6 +633,11 @@ EXPORT(resize) void resize(int width, int height) {
         win[i].h = sh;
       }
       fit(win + i);
+      if (initial && i == MANAGER) {
+        int content_height = tile_y(&win[i], MINES) + 116;
+        win[i].h = imin(sh, imax(405, content_height));
+        win[i].y = (sh - win[i].h) / 3;
+      }
     }
 }
 static void scroll_manager(int d) {

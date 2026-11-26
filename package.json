@@ -1,0 +1,17 @@
+{
+  "name": "windows-311",
+  "version": "1.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "author": "Alan Viotto | Viotto & Co.",
+  "scripts": {
+    "build": "gulp build",
+    "watch": "gulp watch"
+  },
+  "devDependencies": {
+    "gulp": "5.0.1",
+    "gulp-less": "5.0.0",
+    "gulp-terser": "2.1.0",
+    "less": "4.4.2"
+  }
+}

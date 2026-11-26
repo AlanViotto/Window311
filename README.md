@@ -4,7 +4,18 @@ Desktop gráfico em português escrito em **C e compilado para WebAssembly**. O 
 
 ## Executar
 
-O binário `desktop.wasm` acompanha o código. Na raiz do projeto, execute `python3 -m http.server 8080` e abra `http://localhost:8080`. Um servidor estático também pode servir a pasta inteira. A página principal precisa de HTTP para carregar o módulo. A execução dispensa dependências remotas.
+O binário WebAssembly e os assets compilados acompanham o projeto. Use PHP 8.2+ com Valet ou execute `php -S localhost:8080` na raiz e abra `http://localhost:8080/index.php`. O namespace PHP é `Windows`. Autor: Alan Viotto | Viotto & Co.
+
+### Front-end
+
+Execute `npm ci` e `npm run build`. O Gulp compila os fontes LESS em `assets/less` para `dist/css` e processa os scripts de `assets/js` com Terser em `dist/js`. Use `npm run watch` durante o desenvolvimento.
+
+As entradas PHP compartilham a classe `Windows\Desktop`. Para hospedagem estática, há cópias HTML da mesma saída. Depois de alterar o template PHP, atualize-as com:
+
+```sh
+php -r 'require "src/Windows/Desktop.php"; Windows\Desktop::render(static: true);' > index.html
+php -r 'require "src/Windows/Desktop.php"; Windows\Desktop::render(classic: true, static: true);' > classic.html
+```
 
 ## Usar
 
@@ -20,7 +31,7 @@ O binário `desktop.wasm` acompanha o código. Na raiz do projeto, execute `pyth
 
 Com Clang e wasm-ld instalados, execute `make -B`. Alternativamente, use Zig com `make -B CC="zig cc" CFLAGS="-target wasm32-freestanding -Oz -nostdlib -fno-builtin"`.
 
-A lógica está em `src/desktop.c`. O adaptador `host.js` implementa as chamadas do módulo para o navegador. A entrada HTML contém a superfície gráfica e a mensagem de inicialização.
+A lógica está em `src/desktop.c`. O adaptador `assets/js/host.js` implementa as chamadas do módulo para o navegador. A entrada HTML contém a superfície gráfica e a mensagem de inicialização.
 
 ## Escopo e licença
 

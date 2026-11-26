@@ -1,0 +1,43 @@
+@black: #000;
+@paper: #fff;
+@desktop: #008080;
+@chrome: #c0c0c0;
+@ink: #101010;
+@navy: #000080;
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: @black;
+}
+#screen {
+  display: block;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  outline: none;
+  touch-action: none;
+}
+:root {
+  --desktop: @desktop;
+  --chrome: @chrome;
+  --paper: @paper;
+  --ink: @ink;
+  --navy: @navy;
+}
+#message {
+  position: fixed;
+  inset: 1rem auto auto 1rem;
+  max-width: calc(100% - 2rem);
+  padding: 0.65rem 1rem;
+  background: @chrome;
+  color: @ink;
+  border: 2px outset @paper;
+  font:
+    14px/1.4 Arial,
+    sans-serif;
+}

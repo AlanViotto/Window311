@@ -1,12 +1,15 @@
 <!doctype html>
 <html lang="pt-BR">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Window 3.11</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#000}canvas{display:block;width:100vw;height:100dvh;touch-action:none;image-rendering:pixelated;outline:0}#message{position:fixed;top:1em;left:1em;background:white;font:16px sans-serif} 
-</style>
-<canvas id="screen" tabindex="0" aria-label="Window 3.11. Tab alterna programas. Enter abre o programa selecionado. F1 abre a Ajuda."></canvas>
-<output id="message" hidden>Inicializando Window 3.11…</output>
-<script src="host.js" defer></script>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Alan Viotto | Viotto &amp; Co.">
+  <title>Window 3.11</title>
+  <link rel="stylesheet" href="dist/css/screen.css">
+  <script defer src="dist/js/host.js"></script>
+</head>
+<body data-classic="classic.html">
+  <canvas id="screen" tabindex="0" aria-label="Window 3.11. Tab alterna programas. Enter abre o programa selecionado. F1 abre a Ajuda."></canvas>
+  <output id="message" hidden>Inicializando Window 3.11…</output>
+</body>
 </html>
